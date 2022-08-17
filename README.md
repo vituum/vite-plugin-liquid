@@ -6,7 +6,7 @@
 ```js
 export default {
   plugins: [
-    twig({
+    liquid({
       filters: {},
       tags: {},
       data: '*.json',
