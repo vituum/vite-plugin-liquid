@@ -1,4 +1,4 @@
-import { dirname, extname, resolve, relative } from 'path'
+import { dirname, resolve, relative } from 'path'
 import fs from 'fs'
 import process from 'node:process'
 import FastGlob from 'fast-glob'
@@ -9,6 +9,8 @@ import { fileURLToPath } from 'url'
 
 const { name } = JSON.parse(fs.readFileSync(resolve(dirname((fileURLToPath(import.meta.url))), 'package.json')).toString())
 const defaultOptions = {
+    reload: true,
+    root: null,
     filters: {},
     tags: {},
     globals: {},
@@ -17,7 +19,7 @@ const defaultOptions = {
         html: /.(json.html|liquid.json.html|liquid.html)$/,
         json: /.(json.liquid.html)$/
     },
-    options: {}
+    liquid: {}
 }
 
 function processData(paths, data = {}) {
@@ -36,25 +38,26 @@ function processData(paths, data = {}) {
 
 const renderTemplate = async(filename, content, options) => {
     const output = {}
-    const context = processData(options.data, options.globals)
-    let isTemplate = false
+    const context = options.data ? processData(options.data, options.globals) : options.globals
 
-    if (
-        filename.endsWith('.json.html') ||
-        filename.endsWith('.json')
-    ) {
-        lodash.merge(context, JSON.parse(fs.readFileSync(filename).toString()))
+    const isJson = filename.endsWith('.json.html') || filename.endsWith('.json')
+    const isHtml = filename.endsWith('.html') && !filename.endsWith('.json.html')
 
-        isTemplate = true
+    if (isJson || isHtml) {
+        lodash.merge(context, isHtml ? content : JSON.parse(fs.readFileSync(filename).toString()))
 
-        context.template = relative(process.cwd(), context.template)
+        output.template = true
+
+        context.template = relative(process.cwd(), context.template).startsWith(relative(process.cwd(), options.root))
+            ? resolve(process.cwd(), context.template) : resolve(options.root, context.template)
+
     } else if (fs.existsSync(filename + '.json')) {
         lodash.merge(context, JSON.parse(fs.readFileSync(filename + '.json').toString()))
     }
 
     const liquid = new Liquid(Object.assign({
         root: options.root
-    }, options.options))
+    }, options.liquid))
 
     Object.keys(options.filters).forEach(name => {
         if (typeof options.filters[name] !== 'function') {
@@ -73,22 +76,20 @@ const renderTemplate = async(filename, content, options) => {
     })
 
     return new Promise((resolve) => {
-        if (isTemplate) {
-            output.content = liquid.renderFile(context.template, context).catch((error) => {
-                output.error = error
-                resolve(output)
-            }).then((content) => {
-                output.content = content
-                resolve(output)
-            })
+        const onError = (error) => {
+            output.error = error
+            resolve(output)
+        }
+
+        const onSuccess = (content) => {
+            output.content = content
+            resolve(output)
+        }
+
+        if (output.template) {
+            output.content = liquid.renderFile(context.template, context).catch(onError).then(onSuccess)
         } else {
-            output.content = liquid.parseAndRender(content, context).catch((error) => {
-                output.error = error
-                resolve(output)
-            }).then((content) => {
-                output.content = content
-                resolve(output)
-            })
+            output.content = liquid.parseAndRender(content, context).catch(onError).then(onSuccess)
         }
     })
 }
@@ -99,7 +100,9 @@ const plugin = (options = {}) => {
     return {
         name,
         config: ({ root }) => {
-            options.root = root
+            if (!options.root) {
+                options.root = root
+            }
         },
         transformIndexHtml: {
             enforce: 'pre',
@@ -107,13 +110,17 @@ const plugin = (options = {}) => {
                 if (
                     !options.filetypes.html.test(path) &&
                     !options.filetypes.json.test(path) &&
-                    !content.startsWith('<script type="application/json"')
+                    !content.startsWith('<script type="application/json" data-format="liquid"')
                 ) {
                     return content
                 }
 
-                if (content.startsWith('<script type="application/json"') && !content.includes('data-format="liquid"')) {
-                    return content
+                if (content.startsWith('<script type="application/json" data-format="liquid"')) {
+                    const matches = content.matchAll(/<script\b[^>]*data-format="(?<format>[^>]+)"[^>]*>(?<data>[\s\S]+?)<\/script>/gmi)
+
+                    for (const match of matches) {
+                        content = JSON.parse(match.groups.data)
+                    }
                 }
 
                 const render = await renderTemplate(filename, content, options)
@@ -137,7 +144,10 @@ const plugin = (options = {}) => {
             }
         },
         handleHotUpdate({ file, server }) {
-            if (extname(file) === '.liquid' || extname(file) === '.html' || extname(file) === '.json') {
+            if (
+                typeof options.reload === 'function' && options.reload(file) ||
+                options.reload && (options.filetypes.html.test(file) || options.filetypes.json.test(file))
+            ) {
                 server.ws.send({ type: 'full-reload' })
             }
         }

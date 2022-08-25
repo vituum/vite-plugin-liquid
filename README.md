@@ -4,24 +4,32 @@
 # ⚡️💧 ViteLiquid
 
 ```js
+import liquid from '@vituum/vite-plugin-liquid'
+
 export default {
   plugins: [
     liquid({
+      reload: true,
+      root: null,
       filters: {},
       tags: {},
-      data: '*.json',
       globals: {
           template: 'path/to/template.liquid'
       },
+      data: '*.json',
       filetypes: {
           html: /.(json.html|liquid.json.html|liquid.html)$/,
           json: /.(json.liquid.html)$/
       },
-      options: {} // liquidjs options
+      liquid: {}
     })
   ]
 }
 ```
+
+Read the [docs](https://vituum.dev/config/integrations-options.html#vituum-liquid) to learn more about plugin options
+
+## Basic usage
 
 ```html
 <!-- index.html -->
@@ -41,7 +49,7 @@ or
 ```html
 <!-- index.json.html or index.liquid.json.html  -->
 {
-  "template": "path/to/template.twig",
+  "template": "path/to/template.liquid",
   "title": "Hello world"
 }
 ```
@@ -49,3 +57,4 @@ or
 ### Requirements
 
 - [Node.js LTS (16.x)](https://nodejs.org/en/download/)
+- [Vite](https://vitejs.dev/) or [Vituum](https://vituum.dev/)
