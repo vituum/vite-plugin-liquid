@@ -107,6 +107,9 @@ const plugin = (options = {}) => {
         transformIndexHtml: {
             enforce: 'pre',
             async transform(content, { path, filename, server }) {
+                path = path.replace('?raw', '')
+                filename = filename.replace('?raw', '')
+
                 if (
                     !options.filetypes.html.test(path) &&
                     !options.filetypes.json.test(path) &&
@@ -145,8 +148,8 @@ const plugin = (options = {}) => {
         },
         handleHotUpdate({ file, server }) {
             if (
-                typeof options.reload === 'function' && options.reload(file) ||
-                options.reload && (options.filetypes.html.test(file) || options.filetypes.json.test(file))
+                (typeof options.reload === 'function' && options.reload(file)) ||
+                (typeof options.reload === 'boolean' && options.reload && (options.filetypes.html.test(file) || options.filetypes.json.test(file)))
             ) {
                 server.ws.send({ type: 'full-reload' })
             }
