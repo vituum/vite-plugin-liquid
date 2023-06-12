@@ -4,10 +4,11 @@ import process from 'node:process'
 import FastGlob from 'fast-glob'
 import lodash from 'lodash'
 import { Liquid } from 'liquidjs'
-import chalk from 'chalk'
+import pc from 'picocolors'
 import { fileURLToPath } from 'url'
+import { getPackageInfo, pluginError } from 'vituum/utils/common.js'
 
-const { name } = JSON.parse(fs.readFileSync(resolve(dirname((fileURLToPath(import.meta.url))), 'package.json')).toString())
+const { name } = getPackageInfo(import.meta.url)
 const defaultOptions = {
     reload: true,
     root: null,
@@ -118,35 +119,15 @@ const plugin = (options = {}) => {
 
                 if (
                     !options.filetypes.html.test(path) &&
-                    !options.filetypes.json.test(path) &&
-                    !content.startsWith('<script type="application/json" data-format="liquid"')
+                    !options.filetypes.json.test(path)
                 ) {
                     return content
                 }
 
-                if (content.startsWith('<script type="application/json" data-format="liquid"')) {
-                    const matches = content.matchAll(/<script\b[^>]*data-format="(?<format>[^>]+)"[^>]*>(?<data>[\s\S]+?)<\/script>/gmi)
-
-                    for (const match of matches) {
-                        content = JSON.parse(match.groups.data)
-                    }
-                }
-
                 const render = await renderTemplate(filename, content, options)
 
-                if (render.error) {
-                    if (!server) {
-                        console.error(chalk.red(render.error))
-                        return
-                    }
-
-                    setTimeout(() => server.ws.send({
-                        type: 'error',
-                        err: {
-                            message: render.error.message,
-                            plugin: name
-                        }
-                    }), 50)
+                if (pluginError(render, server)) {
+                    return
                 }
 
                 return render.content

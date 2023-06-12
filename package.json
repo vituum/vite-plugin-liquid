@@ -4,14 +4,15 @@
   "type": "module",
   "main": "index.js",
   "dependencies": {
-    "liquidjs": "^10.2.0",
+    "vituum": "^1.0.0-alpha.1",
+    "liquidjs": "^10.8.2",
     "lodash": "^4.17.21",
-    "chalk": "^5.2.0",
+    "picocolors": "^1.0.0",
     "fast-glob": "^3.2.12"
   },
   "devDependencies": {
-    "eslint": "^8.29.0",
-    "eslint-config-standard": "^17.0.0"
+    "eslint": "^8.42.0",
+    "eslint-config-standard": "^17.1.0"
   },
   "files": [
     "index.js"
