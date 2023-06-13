@@ -95,10 +95,10 @@ const plugin = (options = {}) => {
 
     return [{
         name,
-        config (config, env) {
+        config (userConfig, env) {
             userEnv = env
         },
-        configResolved (/** @type {import('vite/dist/node/index.d.ts').UserConfigExport} */ config) {
+        configResolved (config) {
             resolvedConfig = config
 
             if (!options.root) {
