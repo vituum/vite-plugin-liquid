@@ -7,6 +7,10 @@ import { getPackageInfo, pluginError, pluginReload, processData, pluginBundle } 
 import { renameBuildEnd, renameBuildStart } from 'vituum/utils/build.js'
 
 const { name } = getPackageInfo(import.meta.url)
+
+/**
+ * @type {import('@vituum/vite-plugin-liquid/types/index.d.ts').PluginUserConfig}
+ */
 const defaultOptions = {
     reload: true,
     root: null,
@@ -30,7 +34,7 @@ const renderTemplate = async (filename, content, options) => {
     const context = options.data ? processData(options.data, options.globals) : options.globals
 
     if (initialFilename.endsWith('.json')) {
-        lodash.merge(context, JSON.parse(fs.readFileSync(filename).toString()))
+        lodash.merge(context, JSON.parse(fs.readFileSync(initialFilename).toString()))
 
         if (!options.formats.includes(context.format)) {
             return new Promise((resolve) => {
@@ -96,6 +100,10 @@ const renderTemplate = async (filename, content, options) => {
     })
 }
 
+/**
+ * @param {import('@vituum/vite-plugin-liquid/types/index.d.ts').PluginUserConfig} options
+ * @returns [import('vite').Plugin]
+ */
 const plugin = (options = {}) => {
     let resolvedConfig
     let userEnv
@@ -141,7 +149,9 @@ const plugin = (options = {}) => {
                 const render = await renderTemplate(filename, content, options)
                 const renderError = pluginError(render.error, server)
 
-                if (renderError) {
+                if (renderError && server) {
+                    return
+                } else if (renderError) {
                     return renderError
                 }
 
