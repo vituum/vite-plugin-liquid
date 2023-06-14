@@ -12,9 +12,11 @@ const defaultOptions = {
     root: null,
     filters: {},
     tags: {},
-    globals: {},
-    data: null,
-    formats: ['liquid', 'json.liquid'],
+    globals: {
+        format: 'liquid'
+    },
+    data: ['src/data/**/*.json'],
+    formats: ['liquid', 'json.liquid', 'json'],
     liquid: {
         options: {},
         renderOptions: {},
@@ -29,6 +31,13 @@ const renderTemplate = async (filename, content, options) => {
 
     if (initialFilename.endsWith('.json')) {
         lodash.merge(context, JSON.parse(fs.readFileSync(filename).toString()))
+
+        if (!options.formats.includes(context.format)) {
+            return new Promise((resolve) => {
+                output.content = content
+                resolve(output)
+            })
+        }
 
         output.template = true
 
