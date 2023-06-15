@@ -3,7 +3,7 @@ import fs from 'node:fs'
 import process from 'node:process'
 import lodash from 'lodash'
 import { Liquid } from 'liquidjs'
-import { getPackageInfo, pluginError, pluginReload, processData, pluginBundle } from 'vituum/utils/common.js'
+import { getPackageInfo, pluginError, pluginReload, processData, pluginBundle, merge } from 'vituum/utils/common.js'
 import { renameBuildEnd, renameBuildStart } from 'vituum/utils/build.js'
 
 const { name } = getPackageInfo(import.meta.url)
@@ -108,7 +108,7 @@ const plugin = (options = {}) => {
     let resolvedConfig
     let userEnv
 
-    options = lodash.merge(defaultOptions, options)
+    options = merge(defaultOptions, options)
 
     return [{
         name,

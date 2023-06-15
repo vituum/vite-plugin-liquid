@@ -8,5 +8,5 @@
   "env": {
     "browser": true
   },
-  "ignorePatterns": []
+  "ignorePatterns": ["**/*.d.ts"]
 }
