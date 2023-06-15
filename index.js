@@ -147,7 +147,7 @@ const plugin = (options = {}) => {
                 }
 
                 const render = await renderTemplate({ filename, server }, content, options)
-                const renderError = pluginError(render.error, server)
+                const renderError = pluginError(render.error, server, name)
 
                 if (renderError && server) {
                     return
