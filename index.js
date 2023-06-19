@@ -1,6 +1,5 @@
-import { resolve, relative } from 'node:path'
+import { resolve } from 'node:path'
 import fs from 'node:fs'
-import process from 'node:process'
 import lodash from 'lodash'
 import { Liquid } from 'liquidjs'
 import { getPackageInfo, pluginError, pluginReload, processData, pluginBundle, merge } from 'vituum/utils/common.js'
@@ -28,10 +27,13 @@ const defaultOptions = {
     }
 }
 
-const renderTemplate = async ({ filename, server }, content, options) => {
+const renderTemplate = async ({ filename, server, root }, content, options) => {
     const initialFilename = filename.replace('.html', '')
     const output = {}
-    const context = options.data ? processData(options.data, options.globals) : options.globals
+    const context = options.data ? processData({
+        paths: options.data,
+        root
+    }, options.globals) : options.globals
 
     if (initialFilename.endsWith('.json')) {
         lodash.merge(context, JSON.parse(fs.readFileSync(server ? initialFilename : filename).toString()))
@@ -141,7 +143,7 @@ const plugin = (options = {}) => {
                     return content
                 }
 
-                const render = await renderTemplate({ filename, server }, content, options)
+                const render = await renderTemplate({ filename, server, root: resolvedConfig.root }, content, options)
                 const renderError = pluginError(render.error, server, name)
 
                 if (renderError && server) {
