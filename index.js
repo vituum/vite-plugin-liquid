@@ -54,9 +54,7 @@ const renderTemplate = async ({ filename, server }, content, options) => {
             })
         }
 
-        context.template = relative(process.cwd(), context.template).startsWith(relative(process.cwd(), options.root))
-            ? resolve(process.cwd(), context.template)
-            : resolve(options.root, context.template)
+        context.template = resolve(options.root, context.template)
     } else if (fs.existsSync(`${initialFilename}.json`)) {
         lodash.merge(context, JSON.parse(fs.readFileSync(`${initialFilename}.json`).toString()))
     }
@@ -137,9 +135,9 @@ const plugin = (options = {}) => {
             await renameBuildEnd(resolvedConfig.build.rollupOptions.input, options.formats)
         },
         transformIndexHtml: {
-            enforce: 'pre',
+            order: 'pre',
             async transform (content, { filename, server }) {
-                if (!options.formats.find(format => filename.endsWith(format))) {
+                if (!options.formats.find(format => filename.replace('.html', '').endsWith(format))) {
                     return content
                 }
 
