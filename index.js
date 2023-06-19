@@ -9,7 +9,7 @@ import { renameBuildEnd, renameBuildStart } from 'vituum/utils/build.js'
 const { name } = getPackageInfo(import.meta.url)
 
 /**
- * @type {import('@vituum/vite-plugin-liquid/types/index.d.ts').PluginUserConfig}
+ * @type {import('@vituum/vite-plugin-liquid/types').PluginUserConfig}
  */
 const defaultOptions = {
     reload: true,
@@ -101,7 +101,7 @@ const renderTemplate = async ({ filename, server }, content, options) => {
 }
 
 /**
- * @param {import('@vituum/vite-plugin-liquid/types/index.d.ts').PluginUserConfig} options
+ * @param {import('@vituum/vite-plugin-liquid/types').PluginUserConfig} options
  * @returns [import('vite').Plugin]
  */
 const plugin = (options = {}) => {
@@ -138,11 +138,8 @@ const plugin = (options = {}) => {
         },
         transformIndexHtml: {
             enforce: 'pre',
-            async transform (content, { path, filename, server }) {
-                path = path.replace('?raw', '')
-                filename = filename.replace('?raw', '')
-
-                if (!options.formats.find(format => path.endsWith(`${format}.html`))) {
+            async transform (content, { filename, server }) {
+                if (!options.formats.find(format => filename.endsWith(format))) {
                     return content
                 }
 
