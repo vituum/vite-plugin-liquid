@@ -30,10 +30,12 @@ const defaultOptions = {
 const renderTemplate = async ({ filename, server, root }, content, options) => {
     const initialFilename = filename.replace('.html', '')
     const output = {}
-    const context = options.data ? processData({
-        paths: options.data,
-        root
-    }, options.globals) : options.globals
+    const context = options.data
+        ? processData({
+            paths: options.data,
+            root
+        }, options.globals)
+        : options.globals
 
     if (initialFilename.endsWith('.json')) {
         lodash.merge(context, JSON.parse(fs.readFileSync(server ? initialFilename : filename).toString()))
