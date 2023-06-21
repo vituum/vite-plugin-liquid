@@ -38,7 +38,7 @@ const renderTemplate = async ({ filename, server, root }, content, options) => {
         : options.globals
 
     if (initialFilename.endsWith('.json')) {
-        lodash.merge(context, JSON.parse(fs.readFileSync(server ? initialFilename : filename).toString()))
+        lodash.merge(context, JSON.parse(content))
 
         if (!options.formats.includes(context.format)) {
             return new Promise((resolve) => {
@@ -141,7 +141,10 @@ const plugin = (options = {}) => {
         transformIndexHtml: {
             order: 'pre',
             async transform (content, { filename, server }) {
-                if (!options.formats.find(format => filename.replace('.html', '').endsWith(format))) {
+                if (
+                    !options.formats.find(format => filename.replace('.html', '').endsWith(format)) ||
+                    (filename.replace('.html', '').endsWith('.json') && !content.startsWith('{'))
+                ) {
                     return content
                 }
 
