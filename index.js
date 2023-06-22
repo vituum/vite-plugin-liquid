@@ -4,6 +4,7 @@ import lodash from 'lodash'
 import { Liquid } from 'liquidjs'
 import { getPackageInfo, pluginError, pluginReload, processData, pluginBundle, merge } from 'vituum/utils/common.js'
 import { renameBuildEnd, renameBuildStart } from 'vituum/utils/build.js'
+import { minimatch } from 'minimatch'
 
 const { name } = getPackageInfo(import.meta.url)
 
@@ -20,8 +21,8 @@ const defaultOptions = {
     },
     data: ['src/data/**/*.json'],
     formats: ['liquid', 'json.liquid', 'json'],
-    liquid: {
-        options: {},
+    options: {
+        liquidOptions: {},
         renderOptions: {},
         renderFileOptions: {}
     }
@@ -65,7 +66,7 @@ const renderTemplate = async ({ filename, server, root }, content, options) => {
 
     const liquid = new Liquid(Object.assign({
         root: options.root
-    }, options.liquid.options))
+    }, options.options.liquidOptions))
 
     Object.keys(options.filters).forEach(name => {
         if (typeof options.filters[name] !== 'function') {
@@ -95,9 +96,9 @@ const renderTemplate = async ({ filename, server, root }, content, options) => {
         }
 
         if (output.template) {
-            output.content = liquid.renderFile(context.template, context, options.liquid.renderFileOptions).catch(onError).then(onSuccess)
+            output.content = liquid.renderFile(context.template, context, options.options.renderFileOptions).catch(onError).then(onSuccess)
         } else {
-            output.content = liquid.parseAndRender(content, context, options.liquid.renderOptions).catch(onError).then(onSuccess)
+            output.content = liquid.parseAndRender(content, context, options.options.renderOptions).catch(onError).then(onSuccess)
         }
     })
 }
@@ -140,7 +141,7 @@ const plugin = (options = {}) => {
         },
         transformIndexHtml: {
             order: 'pre',
-            async transform (content, { filename, server }) {
+            async transform (content, { path, filename, server }) {
                 if (
                     !options.formats.find(format => filename.replace('.html', '').endsWith(format)) ||
                     (filename.replace('.html', '').endsWith('.json') && !content.startsWith('{'))
@@ -152,6 +153,10 @@ const plugin = (options = {}) => {
                     (filename.replace('.html', '').endsWith('.json') && content.startsWith('{')) &&
                     (JSON.parse(content)?.format && !options.formats.includes(JSON.parse(content)?.format))
                 ) {
+                    return content
+                }
+
+                if (options.ignoredPaths.find(ignoredPath => minimatch(path.replace('.html', ''), ignoredPath) === true)) {
                     return content
                 }
 

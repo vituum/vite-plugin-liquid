@@ -1,5 +1,5 @@
 interface LiquidOptions {
-    options: import('liquidjs').LiquidOptions,
+    liquidOptions: import('liquidjs').LiquidOptions,
     renderOptions: import('liquidjs/dist/src/liquid-options').RenderOptions
     renderFileOptions: import('liquidjs/dist/src/liquid-options').RenderFileOptions
 }
@@ -12,5 +12,6 @@ export interface PluginUserConfig {
     globals?: Object
     data?: string | string[]
     formats?: string[]
-    liquid?: LiquidOptions
+    ignoredPaths?: string[]
+    options?: LiquidOptions
 }

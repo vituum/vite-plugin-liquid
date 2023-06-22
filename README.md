@@ -7,47 +7,29 @@
 import liquid from '@vituum/vite-plugin-liquid'
 
 export default {
-  plugins: [
-    liquid({
-      reload: true,
-      root: null,
-      filters: {},
-      tags: {},
-      globals: {
-          template: 'path/to/template.liquid'
-      },
-      data: '*.json',
-      filetypes: {
-          html: /.(json.html|liquid.json.html|liquid.html)$/,
-          json: /.(json.liquid.html)$/
-      },
-      liquid: {}
-    })
-  ]
+    plugins: [
+        liquid()
+    ],
+    build: {
+        rollupOptions: {
+            input: ['index.liquid.html']
+        }
+    }
 }
 ```
 
-Read the [docs](https://vituum.dev/config/integrations-options.html#vituum-liquid) to learn more about plugin options
+* Read the [docs](https://vituum.dev/plugins/liquid.html) to learn more about the plugin options.
+* Use with [Vituum](https://vituum.dev) to get full functionality.
 
 ## Basic usage
 
 ```html
-<!-- index.html -->
-<script type="application/json" data-format="liquid">
-  {
-    "template": "path/to/template.liquid",
-    "title": "Hello world"
-  }
-</script>
-```
-or
-```html
-<!-- index.liquid.html with index.liquid.json -->
+<!-- index.liquid with index.liquid.json -->
 {{ title }}
 ```
 or
 ```html
-<!-- index.json.html or index.liquid.json.html  -->
+<!-- index.json  -->
 {
   "template": "path/to/template.liquid",
   "title": "Hello world"
@@ -56,5 +38,5 @@ or
 
 ### Requirements
 
-- [Node.js LTS (16.x)](https://nodejs.org/en/download/)
-- [Vite](https://vitejs.dev/) or [Vituum](https://vituum.dev/)
+- [Node.js LTS (18.x)](https://nodejs.org/en/download/)
+- [Vite](https://vitejs.dev/)
