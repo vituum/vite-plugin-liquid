@@ -21,6 +21,7 @@ const defaultOptions = {
     },
     data: ['src/data/**/*.json'],
     formats: ['liquid', 'json.liquid', 'json'],
+    ignoredPaths: [],
     options: {
         liquidOptions: {},
         renderOptions: {},
