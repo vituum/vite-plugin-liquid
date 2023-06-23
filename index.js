@@ -134,14 +134,14 @@ const plugin = (options = {}) => {
             }
         },
         buildStart: async () => {
-            if (userEnv.command !== 'build') {
+            if (userEnv.command !== 'build' || !resolvedConfig.build.rollupOptions.input) {
                 return
             }
 
             await renameBuildStart(resolvedConfig.build.rollupOptions.input, options.formats)
         },
         buildEnd: async () => {
-            if (userEnv.command !== 'build') {
+            if (userEnv.command !== 'build' || !resolvedConfig.build.rollupOptions.input) {
                 return
             }
 
