@@ -8,7 +8,7 @@
     "eslint": "eslint '**/*.js' --fix"
   },
   "dependencies": {
-    "vituum": "^1.0.0-beta.1",
+    "vituum": "^1.0.0-beta.2",
     "liquidjs": "^10.8.3",
     "lodash": "^4.17.21"
   },

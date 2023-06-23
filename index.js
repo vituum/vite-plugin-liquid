@@ -9,7 +9,7 @@ import {
     processData,
     pluginBundle,
     merge,
-    pluginMiddleware
+    pluginMiddleware, normalizePath
 } from 'vituum/utils/common.js'
 import { renameBuildEnd, renameBuildStart } from 'vituum/utils/build.js'
 
@@ -36,13 +36,13 @@ const defaultOptions = {
     }
 }
 
-const renderTemplate = async ({ filename, server, root }, content, options) => {
+const renderTemplate = async ({ filename, server, resolvedConfig }, content, options) => {
     const initialFilename = filename.replace('.html', '')
     const output = {}
     const context = options.data
         ? processData({
             paths: options.data,
-            root
+            root: resolvedConfig.root
         }, options.globals)
         : options.globals
 
@@ -131,6 +131,8 @@ const plugin = (options = {}) => {
 
             if (!options.root) {
                 options.root = config.root
+            } else {
+                options.root = normalizePath(options.root)
             }
         },
         buildStart: async () => {
