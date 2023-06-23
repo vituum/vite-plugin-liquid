@@ -1,6 +1,6 @@
 {
   "name": "@vituum/vite-plugin-liquid",
-  "version": "1.0.0-alpha.14",
+  "version": "1.0.0-alpha.15",
   "type": "module",
   "main": "index.js",
   "scripts": {
@@ -8,10 +8,9 @@
     "eslint": "eslint '**/*.js' --fix"
   },
   "dependencies": {
-    "vituum": "^1.0.0-alpha.22",
+    "vituum": "^1.0.0-alpha.25",
     "liquidjs": "^10.8.3",
-    "lodash": "^4.17.21",
-    "minimatch": "^9.0.1"
+    "lodash": "^4.17.21"
   },
   "devDependencies": {
     "@types/node": "^20.3.1",

@@ -2,9 +2,16 @@ import { resolve } from 'node:path'
 import fs from 'node:fs'
 import lodash from 'lodash'
 import { Liquid } from 'liquidjs'
-import { getPackageInfo, pluginError, pluginReload, processData, pluginBundle, merge } from 'vituum/utils/common.js'
+import {
+    getPackageInfo,
+    pluginTransform,
+    pluginReload,
+    processData,
+    pluginBundle,
+    merge,
+    pluginMiddleware
+} from 'vituum/utils/common.js'
 import { renameBuildEnd, renameBuildStart } from 'vituum/utils/build.js'
-import { minimatch } from 'minimatch'
 
 const { name } = getPackageInfo(import.meta.url)
 
@@ -143,38 +150,11 @@ const plugin = (options = {}) => {
         transformIndexHtml: {
             order: 'pre',
             async transform (content, { path, filename, server }) {
-                if (
-                    !options.formats.find(format => filename.replace('.html', '').endsWith(format)) ||
-                    (filename.replace('.html', '').endsWith('.json') && !content.startsWith('{'))
-                ) {
-                    return content
-                }
-
-                if (
-                    (filename.replace('.html', '').endsWith('.json') && content.startsWith('{')) &&
-                    (JSON.parse(content)?.format && !options.formats.includes(JSON.parse(content)?.format))
-                ) {
-                    return content
-                }
-
-                if (options.ignoredPaths.find(ignoredPath => minimatch(path.replace('.html', ''), ignoredPath) === true)) {
-                    return content
-                }
-
-                const render = await renderTemplate({ filename, server, root: resolvedConfig.root }, content, options)
-                const renderError = pluginError(render.error, server, name)
-
-                if (renderError && server) {
-                    return
-                } else if (renderError) {
-                    return renderError
-                }
-
-                return render.content
+                return pluginTransform(content, { path, filename, server }, { name, options, resolvedConfig, renderTemplate })
             }
         },
         handleHotUpdate: ({ file, server }) => pluginReload({ file, server }, options)
-    }, pluginBundle(options.formats)]
+    }, pluginBundle(options.formats), pluginMiddleware(name, options.formats)]
 }
 
 export default plugin

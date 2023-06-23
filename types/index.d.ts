@@ -15,3 +15,14 @@ export interface PluginUserConfig {
     ignoredPaths?: string[]
     options?: LiquidOptions
 }
+
+declare interface PluginTransformCtx {
+    filename?: string
+    server?: import('vite').ViteDevServer
+    root?: string
+}
+
+export declare function renderTemplate(ctx: PluginTransformCtx, html: string, options: PluginUserConfig) : Promise<{
+    error: string
+    content: string
+}>
