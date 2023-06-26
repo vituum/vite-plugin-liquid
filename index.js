@@ -9,7 +9,7 @@ import {
     processData,
     pluginBundle,
     merge,
-    pluginMiddleware, normalizePath
+    pluginMiddleware
 } from 'vituum/utils/common.js'
 import { renameBuildEnd, renameBuildStart } from 'vituum/utils/build.js'
 
@@ -131,8 +131,6 @@ const plugin = (options = {}) => {
 
             if (!options.root) {
                 options.root = config.root
-            } else {
-                options.root = normalizePath(options.root)
             }
         },
         buildStart: async () => {
