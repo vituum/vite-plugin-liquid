@@ -27,4 +27,4 @@ export declare function renderTemplate(ctx: PluginTransformCtx, html: string, op
     content: string
 }>
 
-export default function plugin(options?: PluginUserConfig) : import('vite').Plugin
+export default function plugin(options?: PluginUserConfig) : import('vite').Plugin[]
