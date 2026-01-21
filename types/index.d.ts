@@ -1,7 +1,7 @@
 interface LiquidOptions {
     liquidOptions: import('liquidjs').LiquidOptions,
-    renderOptions: import('liquidjs/dist/src/liquid-options').RenderOptions
-    renderFileOptions: import('liquidjs/dist/src/liquid-options').RenderFileOptions
+    renderOptions: import('liquidjs/dist/liquid-options').RenderOptions
+    renderFileOptions: import('liquidjs/dist/liquid-options').RenderFileOptions
 }
 
 export interface PluginUserConfig {
