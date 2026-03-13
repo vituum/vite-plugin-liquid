@@ -1,16 +1,16 @@
 import { resolve } from 'node:path'
 import fs from 'node:fs'
-import lodash from 'lodash'
 import { Liquid } from 'liquidjs'
 import {
-    getPackageInfo,
-    pluginTransform,
-    pluginReload,
-    processData,
-    pluginBundle,
-    merge,
-    pluginMiddleware
+  getPackageInfo,
+  pluginTransform,
+  pluginReload,
+  processData,
+  pluginBundle,
+  deepMergeWith,
+  pluginMiddleware,
 } from 'vituum/utils/common.js'
+import { merge } from 'vituum/utils/merge.js'
 import { renameBuildEnd, renameBuildStart } from 'vituum/utils/build.js'
 
 const { name } = getPackageInfo(import.meta.url)
@@ -19,142 +19,145 @@ const { name } = getPackageInfo(import.meta.url)
  * @type {import('@vituum/vite-plugin-liquid/types').PluginUserConfig}
  */
 const defaultOptions = {
-    reload: true,
-    root: null,
-    filters: {},
-    tags: {},
-    globals: {
-        format: 'liquid'
-    },
-    data: ['src/data/**/*.json'],
-    formats: ['liquid', 'json.liquid', 'json'],
-    ignoredPaths: [],
-    options: {
-        liquidOptions: {},
-        renderOptions: {},
-        renderFileOptions: {}
-    }
+  reload: true,
+  root: null,
+  filters: {},
+  tags: {},
+  globals: {
+    format: 'liquid',
+  },
+  data: ['src/data/**/*.json'],
+  formats: ['liquid', 'json.liquid', 'json'],
+  ignoredPaths: [],
+  options: {
+    liquidOptions: {},
+    renderOptions: {},
+    renderFileOptions: {},
+  },
 }
 
-const renderTemplate = async ({ filename, server, resolvedConfig }, content, options) => {
-    const initialFilename = filename.replace('.html', '')
-    const output = {}
-    const context = options.data
-        ? processData({
-            paths: options.data,
-            root: resolvedConfig.root
-        }, options.globals)
-        : options.globals
+const renderTemplate = async ({ filename, resolvedConfig }, content, options) => {
+  const initialFilename = filename.replace('.html', '')
+  const output = {}
+  const context = options.data
+    ? processData({
+        paths: options.data,
+        root: resolvedConfig.root,
+      }, options.globals)
+    : options.globals
 
-    if (initialFilename.endsWith('.json')) {
-        lodash.merge(context, JSON.parse(content))
+  if (initialFilename.endsWith('.json')) {
+    merge(context, JSON.parse(content))
 
-        if (!options.formats.includes(context.format)) {
-            return new Promise((resolve) => {
-                output.content = content
-                resolve(output)
-            })
-        }
-
-        output.template = true
-
-        if (typeof context.template === 'undefined') {
-            const error = `${name}: template must be defined for file ${initialFilename}`
-
-            return new Promise((resolve) => {
-                output.error = error
-                resolve(output)
-            })
-        }
-
-        context.template = resolve(options.root, context.template)
-    } else if (fs.existsSync(`${initialFilename}.json`)) {
-        lodash.merge(context, JSON.parse(fs.readFileSync(`${initialFilename}.json`).toString()))
+    if (!options.formats.includes(context.format)) {
+      return new Promise((resolve) => {
+        output.content = content
+        resolve(output)
+      })
     }
 
-    const liquid = new Liquid(Object.assign({
-        root: options.root
-    }, options.options.liquidOptions))
+    output.template = true
 
-    Object.keys(options.filters).forEach(name => {
-        if (typeof options.filters[name] !== 'function') {
-            throw new TypeError(`${name} needs to be a function!`)
-        }
+    if (typeof context.template === 'undefined') {
+      const error = `${name}: template must be defined for file ${initialFilename}`
 
-        liquid.registerFilter(name, options.filters[name])
-    })
+      return new Promise((resolve) => {
+        output.error = error
+        resolve(output)
+      })
+    }
 
-    Object.keys(options.tags).forEach(name => {
-        if (typeof options.tags[name] !== 'object') {
-            throw new TypeError(`${name} needs to be an object!`)
-        }
+    context.template = resolve(options.root, context.template)
+  }
+  else if (fs.existsSync(`${initialFilename}.json`)) {
+    merge(context, JSON.parse(fs.readFileSync(`${initialFilename}.json`).toString()))
+  }
 
-        liquid.registerTag(name, options.tags[name])
-    })
+  const liquid = new Liquid(Object.assign({
+    root: options.root,
+  }, options.options.liquidOptions))
 
-    return new Promise((resolve) => {
-        const onError = (error) => {
-            output.error = error
-            resolve(output)
-        }
+  Object.keys(options.filters).forEach((name) => {
+    if (typeof options.filters[name] !== 'function') {
+      throw new TypeError(`${name} needs to be a function!`)
+    }
 
-        const onSuccess = (content) => {
-            output.content = content
-            resolve(output)
-        }
+    liquid.registerFilter(name, options.filters[name])
+  })
 
-        if (output.template) {
-            output.content = liquid.renderFile(context.template, context, options.options.renderFileOptions).catch(onError).then(onSuccess)
-        } else {
-            output.content = liquid.parseAndRender(content, context, options.options.renderOptions).catch(onError).then(onSuccess)
-        }
-    })
+  Object.keys(options.tags).forEach((name) => {
+    if (typeof options.tags[name] !== 'object') {
+      throw new TypeError(`${name} needs to be an object!`)
+    }
+
+    liquid.registerTag(name, options.tags[name])
+  })
+
+  return new Promise((resolve) => {
+    const onError = (error) => {
+      output.error = error
+      resolve(output)
+    }
+
+    const onSuccess = (content) => {
+      output.content = content
+      resolve(output)
+    }
+
+    if (output.template) {
+      output.content = liquid.renderFile(context.template, context, options.options.renderFileOptions).catch(onError).then(onSuccess)
+    }
+    else {
+      output.content = liquid.parseAndRender(content, context, options.options.renderOptions).catch(onError).then(onSuccess)
+    }
+  })
 }
 
 /**
  * @param {import('@vituum/vite-plugin-liquid/types').PluginUserConfig} options
- * @returns [import('vite').Plugin]
+ * @returns {import('vite').Plugin[]}
  */
 const plugin = (options = {}) => {
-    let resolvedConfig
-    let userEnv
+  let resolvedConfig
+  let userEnv
 
-    options = merge(defaultOptions, options)
+  options = deepMergeWith(defaultOptions, options)
 
-    return [{
-        name,
-        config (userConfig, env) {
-            userEnv = env
-        },
-        configResolved (config) {
-            resolvedConfig = config
+  return [{
+    name,
+    config(userConfig, env) {
+      userEnv = env
+    },
+    configResolved(config) {
+      resolvedConfig = config
 
-            if (!options.root) {
-                options.root = config.root
-            }
-        },
-        buildStart: async () => {
-            if (userEnv.command !== 'build' || !resolvedConfig.build.rollupOptions.input) {
-                return
-            }
+      if (!options.root) {
+        options.root = config.root
+      }
+    },
+    buildStart: async () => {
+      if (userEnv.command !== 'build' || !resolvedConfig.build.rollupOptions.input) {
+        return
+      }
 
-            await renameBuildStart(resolvedConfig.build.rollupOptions.input, options.formats)
-        },
-        buildEnd: async () => {
-            if (userEnv.command !== 'build' || !resolvedConfig.build.rollupOptions.input) {
-                return
-            }
+      await renameBuildStart(resolvedConfig.build.rollupOptions.input, options.formats)
+    },
+    buildEnd: async () => {
+      if (userEnv.command !== 'build' || !resolvedConfig.build.rollupOptions.input) {
+        return
+      }
 
-            await renameBuildEnd(resolvedConfig.build.rollupOptions.input, options.formats)
-        },
-        transformIndexHtml: {
-            order: 'pre',
-            async handler (content, { path, filename, server }) {
-                return pluginTransform(content, { path, filename, server }, { name, options, resolvedConfig, renderTemplate })
-            }
-        },
-        handleHotUpdate: ({ file, server }) => pluginReload({ file, server }, options)
-    }, pluginBundle(options.formats), pluginMiddleware(name, options.formats)]
+      await renameBuildEnd(resolvedConfig.build.rollupOptions.input, options.formats)
+    },
+    transformIndexHtml: {
+      order: 'pre',
+      /** @returns {Promise<string | Object>} */
+      async handler(content, { path, filename, server }) {
+        return pluginTransform(content, { path, filename, server }, { name, options, resolvedConfig, renderTemplate })
+      },
+    },
+    handleHotUpdate: ({ file, server }) => pluginReload({ file, server }, options),
+  }, pluginBundle(options.formats), pluginMiddleware(name, options.formats)]
 }
 
 export default plugin

@@ -1,7 +1,7 @@
 interface LiquidOptions {
     liquidOptions: import('liquidjs').LiquidOptions,
-    renderOptions: import('liquidjs/dist/src/liquid-options').RenderOptions
-    renderFileOptions: import('liquidjs/dist/src/liquid-options').RenderFileOptions
+    renderOptions: import('liquidjs/dist/liquid-options').RenderOptions
+    renderFileOptions: import('liquidjs/dist/liquid-options').RenderFileOptions
 }
 
 export interface PluginUserConfig {
@@ -27,4 +27,4 @@ export declare function renderTemplate(ctx: PluginTransformCtx, html: string, op
     content: string
 }>
 
-export default function plugin(options?: PluginUserConfig) : import('vite').Plugin
+export default function plugin(options?: PluginUserConfig) : import('vite').Plugin[]
