@@ -1,6 +1,6 @@
 {
   "name": "@vituum/vite-plugin-liquid",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "type": "module",
   "main": "index.js",
   "types": "types/index.d.ts",
@@ -21,14 +21,16 @@
     "vituum": "^2.0.0",
     "liquidjs": "^10.25"
   },
+  "peerDependencies": {
+    "vite": "^8.0"
+  },
   "devDependencies": {
     "@eslint/js": "^10.0",
     "@stylistic/eslint-plugin": "^5.10",
     "@types/node": "^25.5",
     "eslint": "^10.0",
     "globals": "^17.4",
-    "typescript": "^5.9",
-    "vite": "^8.0"
+    "typescript": "^5.9"
   },
   "files": [
     "index.js",
