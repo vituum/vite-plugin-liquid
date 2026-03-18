@@ -1,9 +1,16 @@
 {
   "name": "@vituum/vite-plugin-liquid",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "type": "module",
   "main": "index.js",
   "types": "types/index.d.ts",
+  "description": "Vite plugin for LiquidJS, transforms liquid templates into HTML",
+  "keywords": [
+    "liquidjs",
+    "vituum",
+    "vite",
+    "vite-plugin"
+  ],
   "scripts": {
     "lint": "npm run eslint && npm run tsc",
     "tsc": "tsc",
